@@ -1,0 +1,3 @@
+I had to cripple the NUMBER stuff in SyntaxReader::load
+(src/core/syntaxreader.cpp) to make it NOT fucking color digits,
+which was broken and horrible-looking for XML highlighting.

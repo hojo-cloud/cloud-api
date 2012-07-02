@@ -1,0 +1,47 @@
+_cloud_api()
+{
+    local cur prev words cword
+    #_init_completion || return  # requires bash-completion package and bash 4
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cword="${COMP_CWORD}"
+
+    local api_commands=(
+      <% commands.keys.sort.each do |cmd| %>
+        <%= cmd %>
+      <% end %>
+    )
+    
+    local IFS=$'\n,'
+
+    if [[ $cword -eq 1 ]]
+    then
+        string=`echo ${api_commands[*]} | sed -e 's/ / ,/g' -e 's/$/ /'`
+        COMPREPLY=( $(compgen -W "$string" -- "$cur") )
+        return 0
+
+    elif [[ $cword -gt 1 ]]
+    then
+        [[ $cword -eq 2 ]] && cmd=$prev
+        case $cmd in
+            -h|--help)
+                return 0
+                ;;
+          <% commands.keys.sort.each do |cmd| %>
+            <%= cmd %>)
+                local options=(
+                  <% commands[cmd].each do |param_ary| %>
+                    <%= param_ary[0] %>=
+                  <% end %>
+                )
+                COMPREPLY=( $( compgen -W "${options[*]}" -- "$cur" ) )
+                return 0
+                ;;
+          <% end %>
+        esac
+    fi
+    return 0
+
+} &&
+complete -F _cloud_api -o nospace cloud-api

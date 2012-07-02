@@ -1,0 +1,27 @@
+#!/bin/sh
+
+usage()
+{
+    cat <<EOF
+usage: ${0##*/} <command> [<param>[=<value]] ...
+
+commands and params may be tab-completed.
+if you install the \`highlight' program, output will be colored.
+EOF
+    exit 1
+}
+
+[ $# -lt 1 ] && usage
+[[ "$1" =~ --?h(elp)? ]] && usage
+
+string=`echo $* |tr ' ' '&'`
+
+output=`curl -s "http://localhost:8096/?command=$string" \
+    |xmllint --format -`
+
+if [ -n "`whereis -b highlight 2>/dev/null`" ]
+then
+    echo "$output" | highlight -S xml -O ansi 
+else
+    echo "$output"
+fi
