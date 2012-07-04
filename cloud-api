@@ -2,12 +2,12 @@
 
 usage()
 {
-    cat <<EOF
-usage: ${0##*/} <command> [<param>[=<value]] ...
-
-commands and params may be tab-completed.
-if you install the \`highlight' program, output will be colored.
-EOF
+    cat <<-EOF
+	usage: ${0##*/} <command> [<param>[=<value]] ...
+	
+	commands and params may be tab-completed.
+	if you install the \`highlight' program, output will be colored.
+	EOF
     exit 1
 }
 
