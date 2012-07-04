@@ -4,33 +4,33 @@ require 'nokogiri'
 require 'open-uri'
 require 'json'
 
-#major = '3.0.0'
-#minor = '3.0.0'
-major = '2.2.0'
-minor = '2.2.14'
+# CloudStack version
+#major = '2.2.0'
+#minor = '2.2.14'
+major = '3.0.0'
+minor = '3.0.0'
 
+# Cloud.com URL for API doc
 url_root = "http://download.cloud.com/releases/#{major}/api_#{minor}"
-url_toc  = "#{url_root}/TOC_Root_Admin.html"
+url_toc  = "#{url_root}/TOC_Root_Admin.html"  # table of contents
 
-# This hash will contain all api command names as keys,
-# which will point to arrays of parameters
-#
+# hash to store api commands and arrays of params
 commands = {}
 
+# fetch the document (table of contents)
 doc_toc = Nokogiri::HTML(open(url_toc))
+
+# iterate over every list item,
+# which contains a hyperlink to an api command
+#
 doc_toc.xpath("//li//a").each do |href|
+  path = href.values[0]           # get target of hyperlink
+  base = href.children[0].text    # get label (child) of href
 
-  path = href.values[0]
-  base = path.gsub(/.*\//, '').gsub(/\.html/, '')
-
-  puts "========================================================="
-  puts "Fetching #{base} ..."
-  puts "========================================================="
-
-  url_cmd = "#{url_root}/#{path}"
-
+  puts "====> #{base}"
   #begin 
-    doc_cmd = Nokogiri::HTML(open(url_cmd))
+    # fetch api document
+    doc_cmd = Nokogiri::HTML(open("#{url_root}/#{path}"))
   #rescue
   #end
 
@@ -62,33 +62,48 @@ doc_toc.xpath("//li//a").each do |href|
     a.slice!(0) # also ditch the header on the first table
   end
 
-  commands[base] = Array.new
+  # Create a new key in our hash that points to an array.
+  #
+  # the key name will be the api command name;
+  # the array it points to will contain arrays of parameter info:
+  #
+  #   {
+  #     'apiName' => [
+  #       [ 'param1', 'description1', 'boolean' ],
+  #       [ 'param2', 'description2', 'boolean' ],
+  #       [ 'param3', 'description3', 'boolean' ]
+  #     ],
+  #   }
+  #   
+  base.gsub!(/\s.*$/, '')       # strip " (A)" from the command name first
+  commands[base] = Array.new    # now create the key
 
-  # Iterate over each parameter and clean up the data
+  # Iterate over each parameter and clean up the data,
   # then shove the arrays into the hash
   #
   names.each_with_index do |name, idx|
-    name = name.to_s.chomp
-    desc = descs[idx].to_s.chomp
-    bool = bools[idx].to_s.chomp
+    name = name.to_s.chomp                # remove newlines
+    desc = descs[idx].to_s.chomp          #
+    bool = bools[idx].to_s.chomp          #
 
     [name,desc,bool].each do |data|
-      data.gsub!(/<[^>]*>/, '')
+      data.gsub!(/<[^>]*>/, '')           # remove html tags
     end
 
-    puts "#{name} (#{bool}) - #{desc}"
-    commands[base] << [name, desc, bool]
+    puts "#{name} (#{bool}) - #{desc}"    # print info to stdout
+    commands[base] << [name, desc, bool]  # append the array to our key
   end #each param
   puts
 end #each command
 
-# Write the file
+# Write the JSON file
+#
 begin
   File.open("cloudstack_api_#{minor}.json", "w") do |fh|
     fh.write(commands.to_json)
   end
 rescue => e
-  puts "Couldn't write JSON object to disk!: #{e.message}"
+  puts "Couldn't write JSON object to CWD!: #{e.message}"
   puts "\nTrying to write it to /tmp instead..."
   File.open("/tmp/cloudstack_api_#{minor}.json", "w") do |fh|
     fh.write(commands.to_json)
