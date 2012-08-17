@@ -16,10 +16,20 @@ usage()
 
 string=`echo $* |tr ' ' '&'`
 
-output=`curl -s "http://localhost:8096/?command=$string" \
-    |xmllint --format -`
+url="http://localhost:8096/?command=$string"
+output=`curl -s "$url"`
 
-if [ -n "`whereis -b highlight 2>/dev/null`" ]
+if [ -z "$output" ]
+then
+    echo "ERROR: Didn't receive expected data (is the port right?):"
+    echo
+    curl -v "$url"
+    exit 1
+else
+    output=`echo $output | xmllint --format -`
+fi
+
+if [ -n "`which highlight 2>/dev/null`" ]
 then
     echo "$output" | highlight -S xml -O ansi 
 else
