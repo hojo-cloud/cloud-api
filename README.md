@@ -1,9 +1,9 @@
 cloud-api
 =========
 
-This shell script helps you run arbitrary CloudStack API commands locally
-on your CS management server.  You can tab complete every CloudStack API
-command as well as every parameter for every command. :)
+Shell script to run arbitrary CloudStack API commands locally on your CS
+management server.  You can tab complete every CloudStack API command as well
+as every parameter for every command. :)
 
 (Also included are scripts to generate the programmable completion)
 
